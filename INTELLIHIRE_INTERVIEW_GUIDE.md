@@ -18,6 +18,7 @@
 10. [Real Interview Q&A](#-10-real-interview-qa)
 11. [One-Minute & Five-Minute Explanation](#-11-one-minute--five-minute-explanation)
 12. [Core Concepts Deep Dive](#-12-core-concepts-deep-dive)
+13. [Technology Fundamentals for Beginners](#-13-technology-fundamentals-for-beginners)
 
 ---
 
@@ -1343,6 +1344,820 @@ API security. Invalid data is rejected before it reaches your business logic. No
 | `backend/app/api/api_v1/endpoints/resumes.py` | Batch upload, deduplication |
 | `frontend/app/page.tsx` | React state, API calls, data visualization |
 | `backend/app/db/mongodb.py` | Motor async driver, connection management |
+
+---
+
+## 🎓 13. Technology Fundamentals for Beginners
+
+This section explains the fundamental concepts of each technology used in IntelliHire, assuming you're a complete beginner. We'll use simple analogies and examples to make these concepts easy to understand and remember.
+
+---
+
+### 🐍 Python - The Core Language
+
+**What is Python?**
+Python is a programming language known for being easy to read and write. It's like English for computers.
+
+**Analogy:** If programming languages were ways to give someone directions:
+- **Assembly** = "Walk 47 steps north, turn 32.5 degrees left, walk 12 steps..."
+- **Python** = "Go to the coffee shop on Main Street"
+
+**Why Python for This Project?**
+```python
+# Python is readable - even non-programmers can understand:
+if candidate.score > 80:
+    send_interview_invite(candidate)
+else:
+    add_to_waiting_list(candidate)
+```
+
+**Key Python Concepts Used:**
+
+```python
+# 1. LISTS - Ordered collections
+skills = ["python", "react", "aws"]
+skills.append("docker")  # Add item
+first_skill = skills[0]  # Access by index: "python"
+
+# 2. DICTIONARIES - Key-value pairs (like a real dictionary!)
+candidate = {
+    "name": "Jane Smith",
+    "score": 85,
+    "skills": ["python", "react"]
+}
+print(candidate["name"])  # "Jane Smith"
+
+# 3. FUNCTIONS - Reusable blocks of code
+def calculate_score(experience, skills, trajectory):
+    return experience * 0.5 + skills * 0.35 + trajectory * 0.15
+
+# 4. ASYNC/AWAIT - Do other things while waiting
+async def fetch_and_process():
+    data = await get_from_database()  # Don't block while waiting
+    return process(data)
+
+# 5. CLASSES - Blueprints for objects
+class Resume:
+    def __init__(self, name, skills):
+        self.name = name
+        self.skills = skills
+    
+    def has_skill(self, skill):
+        return skill in self.skills
+
+jane = Resume("Jane", ["python", "react"])
+print(jane.has_skill("python"))  # True
+```
+
+---
+
+### ⚡ FastAPI - The Backend Framework
+
+**What is FastAPI?**
+FastAPI is a tool for building web APIs (Application Programming Interfaces) in Python. It handles HTTP requests from the frontend and returns responses.
+
+**Analogy:** 
+Imagine a **restaurant**:
+- **Customer (Frontend)** → Places an order (HTTP request)
+- **Waiter (FastAPI)** → Takes the order, brings it to the kitchen, returns with food
+- **Kitchen (Business Logic)** → Prepares the meal
+- **Food (Response)** → What the customer receives
+
+**Basic FastAPI Concepts:**
+
+```python
+from fastapi import FastAPI, HTTPException
+
+# Create the app (the restaurant)
+app = FastAPI()
+
+# Define an endpoint (a menu item)
+@app.get("/candidates/{candidate_id}")
+async def get_candidate(candidate_id: str):
+    """This function runs when someone visits /candidates/123"""
+    candidate = find_in_database(candidate_id)
+    if not candidate:
+        raise HTTPException(status_code=404, detail="Not found")
+    return candidate
+
+# POST request (sending data)
+@app.post("/candidates")
+async def create_candidate(name: str, skills: list):
+    """Create a new candidate"""
+    new_id = save_to_database(name, skills)
+    return {"id": new_id, "message": "Created!"}
+```
+
+**HTTP Methods Explained:**
+| Method | Restaurant Analogy | Example |
+|--------|-------------------|----------|
+| GET | "Show me the menu" | Get candidate info |
+| POST | "I'd like to order this" | Upload a new resume |
+| PUT | "Change my order to X" | Update candidate details |
+| DELETE | "Cancel my order" | Remove a candidate |
+
+**Dependency Injection (Advanced but Important):**
+```python
+def get_database():
+    """This creates a database connection"""
+    return DatabaseConnection()
+
+@app.get("/candidates")
+async def list_candidates(db = Depends(get_database)):
+    """FastAPI automatically calls get_database() and passes it in"""
+    return db.query("SELECT * FROM candidates")
+```
+
+---
+
+### ⚛️ React - The Frontend Library
+
+**What is React?**
+React is a JavaScript library for building user interfaces. Instead of writing one giant HTML file, you build small, reusable "components" like LEGO blocks.
+
+**Analogy:**
+Building a webpage like building with LEGOs:
+- **Header Component** = The top LEGO piece (logo, navigation)
+- **Button Component** = A small brick you can use anywhere
+- **Card Component** = A medium structure showing candidate info
+- **App** = All the pieces snapped together
+
+**Core React Concepts:**
+
+```jsx
+// 1. COMPONENTS - Building blocks
+function CandidateCard({ name, score }) {
+  return (
+    <div className="card">
+      <h2>{name}</h2>
+      <p>Score: {score}%</p>
+    </div>
+  );
+}
+
+// 2. PROPS - Data passed to components (like function arguments)
+<CandidateCard name="Jane Smith" score={85} />
+// Renders: Jane Smith, Score: 85%
+
+// 3. STATE - Data that changes over time
+import { useState } from 'react';
+
+function Counter() {
+  // count starts at 0, setCount changes it
+  const [count, setCount] = useState(0);
+  
+  return (
+    <button onClick={() => setCount(count + 1)}>
+      Clicked {count} times
+    </button>
+  );
+}
+
+// 4. HOOKS - Special functions for state and side effects
+import { useState, useEffect, useMemo } from 'react';
+
+function Dashboard() {
+  const [data, setData] = useState([]);
+  
+  // useEffect - Run code when component loads
+  useEffect(() => {
+    fetch('/api/candidates')
+      .then(res => res.json())
+      .then(data => setData(data));
+  }, []);  // Empty array = run once on load
+  
+  // useMemo - Cache expensive calculations
+  const topCandidates = useMemo(() => {
+    return data.filter(c => c.score > 80);
+  }, [data]);  // Only recalculate when data changes
+  
+  return <div>{/* render candidates */}</div>;
+}
+```
+
+**Why React Re-renders:**
+```
+State Changes → React Detects Change → Component Re-renders → UI Updates
+
+Example:
+1. User clicks "Process Candidates"
+2. setResults(newData) is called
+3. React sees 'results' changed
+4. Components using 'results' re-render
+5. User sees ranked candidate list
+```
+
+---
+
+### 🚀 Next.js - The React Framework
+
+**What is Next.js?**
+Next.js is a framework built on top of React that adds extra features like routing, server-side rendering, and API routes.
+
+**Analogy:**
+- **React** = Engine of a car
+- **Next.js** = Complete car with steering wheel, GPS, air conditioning
+
+**Key Next.js Features:**
+
+```
+1. FILE-BASED ROUTING
+   Instead of configuring routes, just create files:
+   
+   frontend/app/
+   ├── page.tsx       → localhost:3000/
+   ├── about/
+   │   └── page.tsx   → localhost:3000/about
+   └── candidates/
+       └── [id]/
+           └── page.tsx → localhost:3000/candidates/123
+
+2. SERVER COMPONENTS (New in Next.js 13+)
+   Components that run on the server, not in the browser.
+   Benefits: Faster page loads, smaller JavaScript bundles.
+
+3. API ROUTES
+   You can create backend APIs right in Next.js:
+   frontend/app/api/hello/route.ts → localhost:3000/api/hello
+```
+
+**Client vs Server Components:**
+```tsx
+// SERVER COMPONENT (default) - runs on server
+// Can access database, file system, etc.
+async function CandidateList() {
+  const candidates = await db.query('SELECT * FROM candidates');
+  return <ul>{candidates.map(c => <li>{c.name}</li>)}</ul>;
+}
+
+// CLIENT COMPONENT - runs in browser
+// Use for interactivity (clicks, state)
+"use client";
+import { useState } from 'react';
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  return <button onClick={() => setCount(count + 1)}>{count}</button>;
+}
+```
+
+---
+
+### 📘 TypeScript - Type-Safe JavaScript
+
+**What is TypeScript?**
+TypeScript is JavaScript with added "types" - labels that tell you what kind of data a variable holds.
+
+**Analogy:**
+Imagine labeled boxes:
+- **JavaScript**: Any box can hold anything (risky!)
+- **TypeScript**: Boxes have labels - "Books Only", "Clothes Only" (safe!)
+
+**Why TypeScript?**
+```typescript
+// WITHOUT TypeScript (JavaScript)
+function greet(name) {
+  return "Hello, " + name.toUpperCase();
+}
+greet(123);  // RUNTIME ERROR! 123.toUpperCase is not a function
+
+// WITH TypeScript
+function greet(name: string): string {
+  return "Hello, " + name.toUpperCase();
+}
+greet(123);  // COMPILE ERROR! Caught before running!
+// Type error: Argument of type 'number' is not assignable to type 'string'
+```
+
+**TypeScript in IntelliHire:**
+```typescript
+// Define the shape of data
+interface Candidate {
+  name: string;
+  score: number;
+  skills: string[];
+}
+
+// TypeScript ensures you use it correctly
+function displayCandidate(candidate: Candidate) {
+  console.log(candidate.name);       // ✅ OK
+  console.log(candidate.age);        // ❌ Error: 'age' doesn't exist
+  console.log(candidate.score + 10); // ✅ OK, score is a number
+}
+
+// Arrays with types
+const candidates: Candidate[] = [];
+candidates.push({ name: "Jane", score: 85, skills: ["python"] }); // ✅
+candidates.push({ name: "John" }); // ❌ Error: missing 'score' and 'skills'
+```
+
+---
+
+### 🍃 MongoDB - The Document Database
+
+**What is MongoDB?**
+MongoDB is a database that stores data as "documents" (like JSON objects) instead of tables with rows and columns.
+
+**Analogy:**
+- **SQL Database (PostgreSQL, MySQL)** = Filing cabinet with rigid folders
+  - Every folder must have exact same sections
+  - "Name", "Age", "Address" in every folder
+  
+- **MongoDB** = Flexible notebook
+  - Each page can have different information
+  - One page has 5 skills, another has 50 skills - both OK!
+
+**SQL vs MongoDB:**
+```
+SQL TABLE:
++----+-------+-----+
+| id | name  | age |
++----+-------+-----+
+| 1  | Jane  | 28  |
+| 2  | John  | 32  |
++----+-------+-----+
+
+MONGODB COLLECTION:
+{
+  "_id": "abc123",
+  "name": "Jane",
+  "age": 28,
+  "skills": ["python", "react"],  // Nested array!
+  "experience": [                  // Nested objects!
+    {"company": "Google", "years": 3},
+    {"company": "Meta", "years": 2}
+  ]
+}
+```
+
+**Common MongoDB Operations:**
+```python
+# Using Motor (async MongoDB driver for Python)
+from motor.motor_asyncio import AsyncIOMotorClient
+
+# Connect
+client = AsyncIOMotorClient("mongodb://localhost:27017")
+db = client["intellihire"]
+collection = db["candidates"]
+
+# CREATE - Insert a document
+await collection.insert_one({
+    "name": "Jane Smith",
+    "skills": ["python", "react"]
+})
+
+# READ - Find documents
+candidate = await collection.find_one({"name": "Jane Smith"})
+all_seniors = await collection.find({"level": "senior"}).to_list(100)
+
+# UPDATE - Modify documents
+await collection.update_one(
+    {"name": "Jane Smith"},
+    {"$set": {"score": 95}}
+)
+
+# DELETE - Remove documents
+await collection.delete_one({"name": "Jane Smith"})
+```
+
+**ObjectId Explained:**
+```python
+from bson import ObjectId
+
+# MongoDB auto-generates unique IDs
+# Example: "507f1f77bcf86cd799439011"
+#          ^^^^^^^^ timestamp
+#                  ^^^^^^ machine ID
+#                        ^^^^ process ID
+#                            ^^^^^^ counter
+
+# To query by ID, convert string to ObjectId
+id_string = "507f1f77bcf86cd799439011"
+object_id = ObjectId(id_string)
+document = await collection.find_one({"_id": object_id})
+```
+
+---
+
+### 🤖 Google Vertex AI & Gemini - The AI Engine
+
+**What is Vertex AI?**
+Google Cloud's platform for machine learning. It hosts various AI models including Gemini.
+
+**What is Gemini?**
+Google's latest large language model (LLM) - like ChatGPT, it understands and generates text.
+
+**Analogy:**
+- **Vertex AI** = A factory that hosts different machines
+- **Gemini** = One specific machine that understands language
+- **Prompt** = Instructions you give the machine
+- **Response** = What the machine produces
+
+**How We Use Gemini:**
+```python
+import vertexai
+from vertexai.generative_models import GenerativeModel, Part
+
+# Initialize connection to Google Cloud
+vertexai.init(project="my-project", location="us-central1")
+
+# Load the Gemini model
+model = GenerativeModel("gemini-2.0-flash")
+
+# Create a prompt
+PROMPT = """
+You are an expert resume parser. Extract structured data:
+{
+  "name": "extracted name",
+  "skills": ["skill1", "skill2"]
+}
+"""
+
+resume_text = "Jane Smith - Software Engineer - Python, React"
+
+# Generate response
+response = model.generate_content([PROMPT, Part.from_text(resume_text)])
+
+# Parse the result
+result = response.candidates[0].content.parts[0].text
+# result = '{"name": "Jane Smith", "skills": ["python", "react"]}'
+```
+
+**LLM Prompting Tips:**
+```
+1. BE SPECIFIC
+   Bad:  "Parse this resume"
+   Good: "Extract name, skills, and experience as JSON"
+
+2. GIVE EXAMPLES
+   "For input 'John - 5 years Python', output: {name: 'John', skills: ['python']}"
+
+3. SPECIFY OUTPUT FORMAT
+   "Return ONLY valid JSON. No markdown. No commentary."
+
+4. HANDLE EDGE CASES
+   "If skill is ambiguous, use lowercase. If name is missing, use null."
+```
+
+---
+
+### 🎨 Tailwind CSS - Utility-First Styling
+
+**What is Tailwind CSS?**
+A CSS framework where you style elements using small utility classes instead of writing custom CSS.
+
+**Analogy:**
+- **Traditional CSS** = Custom-tailored suit (made from scratch)
+- **Tailwind CSS** = Mix-and-match wardrobe (combine pre-made pieces)
+
+**Traditional CSS vs Tailwind:**
+```html
+<!-- TRADITIONAL CSS -->
+<style>
+.card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+</style>
+<div class="card">Content</div>
+
+<!-- TAILWIND CSS -->
+<div class="bg-white rounded-lg p-4 shadow-md">Content</div>
+<!--      ^white    ^rounded   ^padding  ^shadow -->
+```
+
+**Common Tailwind Classes:**
+| Class | What It Does |
+|-------|-------------|
+| `p-4` | padding: 1rem (16px) |
+| `m-2` | margin: 0.5rem (8px) |
+| `flex` | display: flex |
+| `grid` | display: grid |
+| `text-lg` | large text |
+| `font-bold` | bold text |
+| `bg-blue-500` | blue background |
+| `hover:bg-blue-600` | darker blue on hover |
+| `rounded-lg` | large border radius |
+| `shadow-md` | medium shadow |
+
+**Responsive Design:**
+```html
+<!-- Changes based on screen size -->
+<div class="text-sm md:text-base lg:text-lg">
+  <!-- Small screens: small text -->
+  <!-- Medium screens (768px+): base text -->
+  <!-- Large screens (1024px+): large text -->
+</div>
+```
+
+---
+
+### 📊 Recharts - Data Visualization
+
+**What is Recharts?**
+A React library for creating charts and graphs. It turns data into visual representations.
+
+**Analogy:** 
+If your data is ingredients, Recharts is the recipe for cooking beautiful charts.
+
+**Basic Chart Example:**
+```tsx
+import { AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
+
+const data = [
+  { name: 'Jane', score: 85, skills: 90 },
+  { name: 'John', score: 72, skills: 65 },
+  { name: 'Bob', score: 68, skills: 80 },
+];
+
+function ScoreChart() {
+  return (
+    <AreaChart width={600} height={300} data={data}>
+      <XAxis dataKey="name" />      {/* X-axis shows names */}
+      <YAxis />                      {/* Y-axis auto-scales */}
+      <Tooltip />                    {/* Hover for details */}
+      <Area 
+        dataKey="score" 
+        fill="#8884d8"              {/* Purple fill */}
+        stroke="#8884d8" 
+      />
+      <Area 
+        dataKey="skills" 
+        fill="#82ca9d"              {/* Green fill */}
+        stroke="#82ca9d" 
+      />
+    </AreaChart>
+  );
+}
+```
+
+---
+
+### 📄 jsPDF - Client-Side PDF Generation
+
+**What is jsPDF?**
+A JavaScript library that creates PDF files directly in the browser, without needing a server.
+
+**Why Client-Side?**
+- No server processing needed
+- Works offline
+- Instant generation
+- Reduces server costs
+
+**Basic Usage:**
+```typescript
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
+function generateReport() {
+  // Create new PDF
+  const doc = new jsPDF();
+  
+  // Add title
+  doc.setFontSize(20);
+  doc.text("Candidate Report", 40, 40);
+  
+  // Add table
+  autoTable(doc, {
+    head: [['Name', 'Score']],
+    body: [
+      ['Jane Smith', '85%'],
+      ['John Doe', '72%'],
+    ],
+    startY: 60,
+  });
+  
+  // Download the PDF
+  doc.save('candidate-report.pdf');
+}
+```
+
+---
+
+### 🔗 REST APIs - How Frontend Talks to Backend
+
+**What is a REST API?**
+REST (Representational State Transfer) is a way for different software systems to communicate over HTTP.
+
+**Analogy:** 
+REST API is like a waiter in a restaurant:
+1. You (frontend) give your order (request) to the waiter (API)
+2. Waiter takes it to the kitchen (backend)
+3. Kitchen prepares the food (processes data)
+4. Waiter brings back your food (response)
+
+**REST Principles:**
+```
+1. RESOURCES - Things you can interact with (candidates, resumes, jobs)
+2. ENDPOINTS - URLs for each resource
+   GET    /candidates      → List all candidates
+   GET    /candidates/123  → Get candidate with ID 123
+   POST   /candidates      → Create new candidate
+   PUT    /candidates/123  → Update candidate 123
+   DELETE /candidates/123  → Delete candidate 123
+
+3. STATELESS - Each request is independent (no memory)
+4. JSON - Standard format for data exchange
+```
+
+**Making API Calls in JavaScript:**
+```javascript
+// GET request - fetch data
+const response = await fetch('http://localhost:8000/api/candidates');
+const candidates = await response.json();
+
+// POST request - send data
+const response = await fetch('http://localhost:8000/api/candidates', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: 'Jane', score: 85 })
+});
+const newCandidate = await response.json();
+
+// File upload with FormData
+const formData = new FormData();
+formData.append('file', selectedFile);
+
+const response = await fetch('http://localhost:8000/api/resumes/upload', {
+  method: 'POST',
+  body: formData  // No Content-Type header needed for FormData
+});
+```
+
+---
+
+### 🔒 CORS - Cross-Origin Resource Sharing
+
+**What is CORS?**
+A security feature that controls which websites can request data from your API.
+
+**Analogy:**
+CORS is like a nightclub bouncer:
+- **Bouncer (CORS)** checks if you're on the guest list (allowed origins)
+- If you're allowed, you can enter (API responds)
+- If not, you're turned away (browser blocks request)
+
+**Why CORS Exists:**
+```
+Without CORS, any website could:
+1. Make requests to your bank's API
+2. Steal your data
+3. Perform actions on your behalf
+
+With CORS:
+1. Bank's API only allows requests from bank.com
+2. Evil-website.com gets blocked by the browser
+```
+
+**CORS in IntelliHire:**
+```python
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all (for development)
+    # In production: allow_origins=["https://intellihire.com"]
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+)
+```
+
+---
+
+### 🧮 Hashing (SHA-256) - Unique Fingerprints
+
+**What is Hashing?**
+A hash function takes any input and produces a fixed-size "fingerprint" that's unique to that input.
+
+**Analogy:**
+Hashing is like a fingerprint scanner:
+- Every person has a unique fingerprint
+- Same person → same fingerprint (always)
+- Different people → different fingerprints
+- You can't reverse a fingerprint back to a person
+
+**How We Use Hashing:**
+```python
+import hashlib
+
+# Same content = same hash (for deduplication)
+resume_content = b"Jane Smith - Software Engineer - Python"
+hash1 = hashlib.sha256(resume_content).hexdigest()
+# Returns: "a1b2c3d4e5f6..." (64 characters)
+
+# Even tiny changes = completely different hash
+resume_modified = b"Jane Smith - Software Engineer - Python." # Added period
+hash2 = hashlib.sha256(resume_modified).hexdigest()
+# Returns: "x9y8z7w6v5..." (completely different!)
+
+# Use case: Check if we've seen this resume before
+existing = await collection.find_one({"file_hash": hash1})
+if existing:
+    print("Already processed this resume!")
+```
+
+---
+
+### ⚡ Async/Await - Non-Blocking Operations
+
+**What is Async Programming?**
+A way to run tasks that take time (like API calls, database queries) without blocking other operations.
+
+**Analogy:**
+- **Synchronous (Blocking)**: You're cooking and must watch the pot. Can't do anything else.
+- **Asynchronous (Non-Blocking)**: You put food in the oven, set a timer, and do other tasks while it cooks.
+
+**Sync vs Async:**
+```python
+# SYNCHRONOUS (Blocking)
+def process_resumes(resumes):
+    for resume in resumes:
+        score = call_gemini_api(resume)  # Wait here for each one
+        save_to_db(score)                 # Then wait here
+    # Total time: 5 resumes × 2 seconds = 10 seconds
+
+# ASYNCHRONOUS (Non-Blocking)
+async def process_resumes(resumes):
+    tasks = []
+    for resume in resumes:
+        task = call_gemini_api_async(resume)  # Start all at once
+        tasks.append(task)
+    scores = await asyncio.gather(*tasks)      # Wait for all to finish
+    for score in scores:
+        await save_to_db(score)
+    # Total time: ~2-3 seconds (parallel processing!)
+```
+
+**Key Keywords:**
+```python
+# async - marks a function as asynchronous
+async def my_function():
+    pass
+
+# await - pause here until this operation completes
+result = await some_slow_operation()
+
+# Can ONLY use await inside async functions
+```
+
+---
+
+### 📦 Environment Variables - Secret Configuration
+
+**What are Environment Variables?**
+Configuration values stored outside your code, typically in a `.env` file.
+
+**Why Use Them?**
+- **Security**: Don't commit API keys to Git
+- **Flexibility**: Different settings for dev/staging/production
+- **Secrets**: Database passwords, API keys
+
+**Example `.env` File:**
+```bash
+# .env (NEVER commit this to Git!)
+MONGODB_URL=mongodb://localhost:27017
+GOOGLE_CLOUD_PROJECT=my-project-123
+SECRET_KEY=super-secret-key-12345
+```
+
+**Using Environment Variables:**
+```python
+import os
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
+
+# Access variables
+mongo_url = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+#                     ^variable name    ^default if not found
+
+project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
+if not project_id:
+    raise ValueError("Missing GOOGLE_CLOUD_PROJECT!")
+```
+
+---
+
+## 📝 Quick Reference Card
+
+| Technology | What It Does | One-Line Summary |
+|------------|--------------|------------------|
+| **Python** | Backend language | Easy-to-read language with great AI libraries |
+| **FastAPI** | Web framework | Creates REST APIs with automatic documentation |
+| **React** | UI library | Builds interfaces from reusable components |
+| **Next.js** | React framework | Adds routing, SSR, and optimization to React |
+| **TypeScript** | Type-safe JS | JavaScript with compile-time error checking |
+| **MongoDB** | Document database | Stores flexible JSON-like documents |
+| **Vertex AI/Gemini** | AI platform | Google's LLM for text understanding |
+| **Tailwind CSS** | Styling | Utility classes for rapid UI development |
+| **Recharts** | Charts | React components for data visualization |
+| **jsPDF** | PDF generation | Creates PDFs in the browser |
+| **Motor** | Async MongoDB | Non-blocking MongoDB driver for Python |
+| **Pydantic** | Validation | Ensures data matches expected types |
+| **rapidfuzz** | String matching | Finds similar strings (handles typos) |
 
 ---
 
