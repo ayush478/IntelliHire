@@ -13,3 +13,5 @@ uvicorn
 fastapi
 python-multipart
 motor
+rapidfuzz
+pydantic-settings

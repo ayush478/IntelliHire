@@ -11,6 +11,8 @@ from vertexai.generative_models import GenerativeModel, Part
 from app.models.base import Resume
 from app.db.mongodb import MongoDB, get_db
 from app.core.config import settings
+from app.core.text_extract import extract_text
+from app.core.usage import record
 
 router = APIRouter()
 
@@ -55,6 +57,7 @@ Return ONLY the JSON object.
 def parse_resume_with_gemini(resume_text: str) -> dict:
     vertexai.init(project=PROJECT_ID, location=LOCATION)
     gemini = GenerativeModel(GEMINI_MODEL_NAME)
+    record("gemini_parse_resume")
     resp = gemini.generate_content([RESUME_PROMPT, Part.from_text(resume_text)], safety_settings=None)
     raw = resp.candidates[0].content.parts[0].text if resp and resp.candidates else "{}"
     raw = raw.strip().strip("` ")
@@ -86,8 +89,10 @@ async def upload_resume(
     if existing:
         return db.serialize_doc(existing)
     
-    # Parse resume using Gemini
-    resume_text = content.decode('utf-8', errors='ignore')
+    # Extract text first, so we never pay Gemini to read raw PDF/DOCX bytes
+    resume_text = extract_text(file.filename, content)
+    if not resume_text:
+        raise HTTPException(status_code=422, detail=f"Could not extract text from {file.filename}")
     parsed_data = parse_resume_with_gemini(resume_text)
     
     # Build dict for MongoDB
@@ -121,7 +126,9 @@ async def upload_resumes_batch(
         if existing:
             results.append(db.serialize_doc(existing))
             continue
-        resume_text = content.decode('utf-8', errors='ignore')
+        resume_text = extract_text(file.filename, content)
+        if not resume_text:
+            continue  # unreadable file: skip it rather than pay Gemini for empty text
         parsed_data = parse_resume_with_gemini(resume_text)
         resume_data = {
             "file_hash": file_hash,

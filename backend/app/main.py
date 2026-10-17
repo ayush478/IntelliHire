@@ -8,6 +8,7 @@ from .core.config import settings
 from .api.api_v1.api import api_router
 from fastapi import FastAPI
 from app.db.mongodb import MongoDB
+from app.core.usage import calls as usage_calls
 
 
 
@@ -41,6 +42,16 @@ app.include_router(api_router, prefix="/api/v1")
 @app.get("/")
 async def root():
     return {"message": "Welcome to Talent Intel AI API"}
+
+@app.get("/api/v1/usage")
+async def get_usage():
+    """Paid model calls made by this process, by kind."""
+    return dict(usage_calls)
+
+@app.post("/api/v1/usage/reset")
+async def reset_usage():
+    usage_calls.clear()
+    return {}
 
 if __name__ == "__main__":
     import uvicorn

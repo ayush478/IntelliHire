@@ -5,6 +5,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from app.models.base import Score
 from app.db.mongodb import MongoDB, get_db
 from app.core.config import settings
+from app.core.usage import record
 import vertexai
 from vertexai.generative_models import GenerativeModel, Part
 import os
@@ -335,8 +336,14 @@ async def batch_score_resumes(
             continue
         res_struct = resume.get("parsed_data", {})
         res_text = resume.get("content", {}).get("text", "")
-        # AI detection via Gemini (like app.py)
-        ai_struct = gemini_json(gemini, AI_DETECT_PROMPT, res_text)
+        # AI detection depends only on the resume text, so cache it on the resume
+        # itself: a new JD or new weights must not pay Gemini again.
+        ai_struct = resume.get("ai_detection")
+        if ai_struct is None:
+            record("gemini_ai_detect")
+            ai_struct = gemini_json(gemini, AI_DETECT_PROMPT, res_text)
+            if ai_struct:  # don't cache a failed/empty response
+                await resumes_collection.update_one({"_id": object_id}, {"$set": {"ai_detection": ai_struct}})
         ai_pct = int(ai_struct.get("ai_likelihood_percent", 0))
         ai_pct = max(0, min(100, ai_pct))
         # Improved AI validity: use a non-linear scale to avoid harsh penalty for moderate AI content

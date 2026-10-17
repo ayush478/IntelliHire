@@ -14,6 +14,7 @@ import json
 from app.models.base import JobDescription
 from app.db.mongodb import MongoDB, get_db
 from app.core.config import settings
+from app.core.usage import record
 
 router = APIRouter()
 
@@ -70,6 +71,7 @@ def parse_jd_with_gemini(jd_text: str) -> dict:
     print("Initializing Vertex AI...", PROJECT_ID, LOCATION)
     vertexai.init(project=PROJECT_ID, location=LOCATION)
     gemini = GenerativeModel(GEMINI_MODEL_NAME)
+    record("gemini_parse_jd")
     resp = gemini.generate_content([JD_PROMPT, Part.from_text(jd_text)], safety_settings=None)
     raw = resp.candidates[0].content.parts[0].text if resp and resp.candidates else "{}"
     raw = raw.strip().strip("` ")
